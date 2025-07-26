@@ -5,6 +5,8 @@ import asyncio
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+import threading
+from flask import Flask
 
 from database import UserDatabase
 from utils import create_embed, format_time, format_voice_time, get_level_progress, create_progress_bar
@@ -838,6 +840,27 @@ async def load_cogs():
     except Exception as e:
         print(f"❌ Failed to load Economy cog: {e}")
 
+# Create Flask app for Render
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 Discord Bot is running! Bot is online and ready to serve."
+
+@app.route('/health')
+def health():
+    return "OK", 200
+
+def run_flask():
+    """Run Flask web server"""
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
 # Run the bot
 if __name__ == "__main__":
+    # Start Flask server in a separate thread
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    
+    # Run the Discord bot
     bot.run(config['bot_token'])
